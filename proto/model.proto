@@ -1,0 +1,12 @@
+syntax = "proto3";
+option go_package = ".";
+
+service PriceService{
+  rpc GetPrices(GetPricesRequest) returns(stream GetPricesResponse);
+}
+
+message GetPricesRequest{}
+
+message GetPricesResponse{
+  map<string, float> prices = 1;
+}
