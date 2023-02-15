@@ -2,97 +2,59 @@
 package handler
 
 import (
-	"context"
-	"sync"
-
 	"Price-Provider/internal/model"
 	pr "Price-Provider/proto"
+	"context"
 
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 // PriceService service interface for user handler
 //
 //go:generate mockery --name=PriceService --case=underscore --output=./mocks
 type PriceService interface {
-	GetPrices(ctx context.Context) (model.Prices, error)
-}
+	GetPrices(ctx context.Context) ([]*model.Price, error)
 
-// StreamGRPC service interface for grpc stream
-//
-//go:generate mockery --name=StreamGRPC --case=underscore --output=./mocks
-type StreamGRPC interface {
-	Send(*pr.GetPricesResponse) error
-}
-
-// grpc streams sync slice
-type streams struct {
-	MU   sync.Mutex
-	data map[string]chan model.Prices
+	AddChannel(chan []*model.Price, uuid.UUID)
+	DelChannel(uuid.UUID)
 }
 
 // Price handler
 type Price struct {
 	pr.UnimplementedPriceServiceServer
-	s   PriceService
-	str streams
+	s PriceService
 }
 
 // NewPrice constructor
 func NewPrice(s PriceService) *Price {
-	return &Price{s: s, str: streams{
-		MU:   sync.Mutex{},
-		data: make(map[string]chan model.Prices, 0),
-	}}
+	return &Price{s: s}
 }
 
 // GetPrices add new grpc stream to stream slice
 func (h *Price) GetPrices(_ *pr.GetPricesRequest, server pr.PriceService_GetPricesServer) error {
-	h.str.MU.Lock()
-	var streamChan = make(chan model.Prices, 1)
+	var streamChan = make(chan []*model.Price, 1)
 	var id = uuid.New()
-	h.str.data[id.String()] = streamChan
-	h.str.MU.Unlock()
+	h.s.AddChannel(streamChan, id)
 
 	for {
 		p, open := <-streamChan
 		if !open {
 			return nil
 		}
+		protoPrices := make([]*pr.Price, len(p))
+		for i := range protoPrices {
+			protoPrices[i] = &pr.Price{
+				Name:          p[i].Name,
+				SellingPrice:  p[i].SellingPrice,
+				PurchasePrice: p[i].PurchasePrice,
+			}
+		}
 		err := server.Send(&pr.GetPricesResponse{
-			Prices: p,
+			Prices: protoPrices,
 		})
 		if err != nil {
-			h.str.MU.Lock()
-			delete(h.str.data, id.String())
-			h.str.MU.Unlock()
+			h.s.DelChannel(id)
 			return err
-		}
-	}
-}
-
-// Cycle getting data from redis and adding it to grpc streams
-func (h *Price) Cycle(end <-chan struct{}) {
-	var price model.Prices
-	var err error
-
-	for {
-		select {
-		case <-end:
-			return
-		default:
-			price, err = h.s.GetPrices(context.Background())
-			if err != nil {
-				logrus.Fatalf("price - Cycle - GetPrices:%e", err)
-				return
-			}
-
-			h.str.MU.Lock()
-			for _, s := range h.str.data {
-				s <- price
-			}
-			h.str.MU.Unlock()
 		}
 	}
 }

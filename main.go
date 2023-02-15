@@ -32,15 +32,14 @@ func main() {
 	})
 	defer client.Close()
 
-	redisRep := repository.NewRedis(client, cfg.StreamName)
-	priceService := service.NewPrices(redisRep)
+	redisRep := repository.NewRedis(client, cfg.StreamName, cfg.GroupName)
+	cls := make(chan struct{})
+	priceService := service.NewPrices(redisRep, cls)
+	defer close(cls)
 	priceHandler := handler.NewPrice(priceService)
 
 	ns := grpc.NewServer()
 	pr.RegisterPriceServiceServer(ns, priceHandler)
-	cls := make(chan struct{})
-	go priceHandler.Cycle(cls)
-	defer close(cls)
 
 	if err = ns.Serve(listen); err != nil {
 		defer logrus.Fatalf("error while listening server: %e", err)
