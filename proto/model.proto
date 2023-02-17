@@ -2,10 +2,16 @@ syntax = "proto3";
 option go_package = ".";
 
 service PriceService{
-  rpc GetPrices(GetPricesRequest) returns(stream GetPricesResponse);
+  rpc GetPrices(stream GetPricesRequest) returns(stream GetPricesResponse);
+
+  rpc GetAllPrices(Request) returns(GetPricesResponse);
 }
 
-message GetPricesRequest{}
+message GetPricesRequest{
+  repeated string Names = 1;
+}
+
+message Request{}
 
 message GetPricesResponse{
   repeated Price prices = 1;

@@ -22,7 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PriceServiceClient interface {
-	GetPrices(ctx context.Context, in *GetPricesRequest, opts ...grpc.CallOption) (PriceService_GetPricesClient, error)
+	GetPrices(ctx context.Context, opts ...grpc.CallOption) (PriceService_GetPricesClient, error)
+	GetAllPrices(ctx context.Context, in *Request, opts ...grpc.CallOption) (*GetPricesResponse, error)
 }
 
 type priceServiceClient struct {
@@ -33,28 +34,27 @@ func NewPriceServiceClient(cc grpc.ClientConnInterface) PriceServiceClient {
 	return &priceServiceClient{cc}
 }
 
-func (c *priceServiceClient) GetPrices(ctx context.Context, in *GetPricesRequest, opts ...grpc.CallOption) (PriceService_GetPricesClient, error) {
+func (c *priceServiceClient) GetPrices(ctx context.Context, opts ...grpc.CallOption) (PriceService_GetPricesClient, error) {
 	stream, err := c.cc.NewStream(ctx, &PriceService_ServiceDesc.Streams[0], "/PriceService/GetPrices", opts...)
 	if err != nil {
 		return nil, err
 	}
 	x := &priceServiceGetPricesClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
 	return x, nil
 }
 
 type PriceService_GetPricesClient interface {
+	Send(*GetPricesRequest) error
 	Recv() (*GetPricesResponse, error)
 	grpc.ClientStream
 }
 
 type priceServiceGetPricesClient struct {
 	grpc.ClientStream
+}
+
+func (x *priceServiceGetPricesClient) Send(m *GetPricesRequest) error {
+	return x.ClientStream.SendMsg(m)
 }
 
 func (x *priceServiceGetPricesClient) Recv() (*GetPricesResponse, error) {
@@ -65,11 +65,21 @@ func (x *priceServiceGetPricesClient) Recv() (*GetPricesResponse, error) {
 	return m, nil
 }
 
+func (c *priceServiceClient) GetAllPrices(ctx context.Context, in *Request, opts ...grpc.CallOption) (*GetPricesResponse, error) {
+	out := new(GetPricesResponse)
+	err := c.cc.Invoke(ctx, "/PriceService/GetAllPrices", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PriceServiceServer is the server API for PriceService service.
 // All implementations must embed UnimplementedPriceServiceServer
 // for forward compatibility
 type PriceServiceServer interface {
-	GetPrices(*GetPricesRequest, PriceService_GetPricesServer) error
+	GetPrices(PriceService_GetPricesServer) error
+	GetAllPrices(context.Context, *Request) (*GetPricesResponse, error)
 	mustEmbedUnimplementedPriceServiceServer()
 }
 
@@ -77,8 +87,11 @@ type PriceServiceServer interface {
 type UnimplementedPriceServiceServer struct {
 }
 
-func (UnimplementedPriceServiceServer) GetPrices(*GetPricesRequest, PriceService_GetPricesServer) error {
+func (UnimplementedPriceServiceServer) GetPrices(PriceService_GetPricesServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetPrices not implemented")
+}
+func (UnimplementedPriceServiceServer) GetAllPrices(context.Context, *Request) (*GetPricesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllPrices not implemented")
 }
 func (UnimplementedPriceServiceServer) mustEmbedUnimplementedPriceServiceServer() {}
 
@@ -94,15 +107,12 @@ func RegisterPriceServiceServer(s grpc.ServiceRegistrar, srv PriceServiceServer)
 }
 
 func _PriceService_GetPrices_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetPricesRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(PriceServiceServer).GetPrices(m, &priceServiceGetPricesServer{stream})
+	return srv.(PriceServiceServer).GetPrices(&priceServiceGetPricesServer{stream})
 }
 
 type PriceService_GetPricesServer interface {
 	Send(*GetPricesResponse) error
+	Recv() (*GetPricesRequest, error)
 	grpc.ServerStream
 }
 
@@ -114,18 +124,50 @@ func (x *priceServiceGetPricesServer) Send(m *GetPricesResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func (x *priceServiceGetPricesServer) Recv() (*GetPricesRequest, error) {
+	m := new(GetPricesRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _PriceService_GetAllPrices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PriceServiceServer).GetAllPrices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/PriceService/GetAllPrices",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PriceServiceServer).GetAllPrices(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PriceService_ServiceDesc is the grpc.ServiceDesc for PriceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var PriceService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "PriceService",
 	HandlerType: (*PriceServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetAllPrices",
+			Handler:    _PriceService_GetAllPrices_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "GetPrices",
 			Handler:       _PriceService_GetPrices_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "proto/model.proto",

@@ -18,22 +18,20 @@ type Redis struct {
 }
 
 // NewRedis constructor
-func NewRedis(client *redis.Client, streamName, groupName string) *Redis {
+func NewRedis(client *redis.Client, streamName string) *Redis {
 	rds := &Redis{Client: client, StreamName: streamName}
-	_, _ = client.XGroupCreateMkStream(context.Background(), streamName, groupName, "$").Result()
 	return rds
 }
 
 // GetPrices get last prices from stream
-func (c *Redis) GetPrices(ctx context.Context) ([]*model.Price, error) {
-	data, err := c.Client.XReadGroup(ctx, &redis.XReadGroupArgs{
-		Group:   "gr",
-		Streams: []string{c.StreamName, ">"},
+func (c *Redis) GetPrices(ctx context.Context, offset string) ([]*model.Price, string, error) {
+	data, err := c.Client.XRead(ctx, &redis.XReadArgs{
+		Streams: []string{c.StreamName, offset},
 		Count:   1,
 		Block:   0,
 	}).Result()
 	if err != nil {
-		return nil, fmt.Errorf("redis - GetPrices - XRead: %w", err)
+		return nil, "", fmt.Errorf("redis - GetPrices - XRead: %w", err)
 	}
 
 	message := data[0].Messages[0]
@@ -41,7 +39,7 @@ func (c *Redis) GetPrices(ctx context.Context) ([]*model.Price, error) {
 	var prices []*model.Price
 	err = json.Unmarshal(dataFromStream, &prices)
 	if err != nil {
-		return nil, fmt.Errorf("redis - GetPrices - Unmarshal: %w", err)
+		return nil, "", fmt.Errorf("redis - GetPrices - Unmarshal: %w", err)
 	}
-	return prices, nil
+	return prices, message.ID, nil
 }
