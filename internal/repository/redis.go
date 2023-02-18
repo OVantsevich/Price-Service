@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"Price-Provider/internal/model"
+	"Price-Service/internal/model"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -35,7 +35,7 @@ func (c *Redis) GetPrices(ctx context.Context, offset string) ([]*model.Price, s
 	}
 
 	message := data[0].Messages[0]
-	dataFromStream := []byte(message.Values["prices"].(string))
+	dataFromStream := []byte(message.Values["data"].(string))
 	var prices []*model.Price
 	err = json.Unmarshal(dataFromStream, &prices)
 	if err != nil {

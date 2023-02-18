@@ -2,9 +2,8 @@
 package handler
 
 import (
-	"Price-Provider/internal/model"
-	pr "Price-Provider/proto"
-	"context"
+	"Price-Service/internal/model"
+	pr "Price-Service/proto"
 
 	"github.com/google/uuid"
 )
@@ -13,10 +12,9 @@ import (
 //
 //go:generate mockery --name=PriceService --case=underscore --output=./mocks
 type PriceService interface {
-	GetPrices(ctx context.Context) ([]*model.Price, error)
-
-	AddChannel(chan []*model.Price, uuid.UUID)
-	DelChannel(uuid.UUID)
+	Sub(c chan struct{}, id uuid.UUID)
+	UnSub(id uuid.UUID)
+	Lock()
 }
 
 // Price handler
@@ -31,11 +29,9 @@ func NewPrice(s PriceService) *Price {
 }
 
 // GetPrices add new grpc stream to stream slice
-func (h *Price) GetPrices(_ *pr.GetPricesRequest, server pr.PriceService_GetPricesServer) error {
-	var streamChan = make(chan []*model.Price, 1)
+func (h *Price) GetPrices(server pr.PriceService_GetPricesServer) error {
+	var streamChan = make(chan map[string]*model.Price, 1)
 	var id = uuid.New()
-	h.s.AddChannel(streamChan, id)
-
 	for {
 		p, open := <-streamChan
 		if !open {
@@ -55,6 +51,17 @@ func (h *Price) GetPrices(_ *pr.GetPricesRequest, server pr.PriceService_GetPric
 		if err != nil {
 			h.s.DelChannel(id)
 			return err
+		}
+	}
+}
+
+func (h *Price) change(server pr.PriceService_GetPricesServer) {
+	var response *pr.GetPricesRequest
+	var err error
+	for {
+		response, err = server.Recv()
+		if err != nil {
+
 		}
 	}
 }

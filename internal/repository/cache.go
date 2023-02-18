@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"Price-Provider/internal/model"
+	"Price-Service/internal/model"
 )
 
 // Cache cache of prices
@@ -38,4 +38,9 @@ func (c *Cache) Put(prices []*model.Price) {
 		c.data[p.Name] = p
 	}
 	c.Unlock()
+}
+
+// Size get cache size
+func (c *Cache) Size() int {
+	return c.Size()
 }

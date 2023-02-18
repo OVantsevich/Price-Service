@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net"
 
-	"Price-Provider/internal/config"
-	"Price-Provider/internal/handler"
-	"Price-Provider/internal/repository"
-	"Price-Provider/internal/service"
-	pr "Price-Provider/proto"
+	"Price-Service/internal/config"
+	"Price-Service/internal/handler"
+	"Price-Service/internal/repository"
+	"Price-Service/internal/service"
+	pr "Price-Service/proto"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
