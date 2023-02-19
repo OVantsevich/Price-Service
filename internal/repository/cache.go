@@ -8,26 +8,32 @@ import (
 	"Price-Service/internal/model"
 )
 
+// CacheElement storing prices and subscribers
+type CacheElement struct {
+	subs map[string]struct{}
+	*model.Price
+}
+
 // Cache cache of prices
 type Cache struct {
-	sync.Mutex
-	data map[string]*model.Price
+	sync.RWMutex
+	data map[string]*CacheElement
 }
 
 // NewCache constructor
 func NewCache() *Cache {
-	return &Cache{data: make(map[string]*model.Price)}
+	return &Cache{data: make(map[string]*CacheElement)}
 }
 
 // Get get price from map
 func (c *Cache) Get(key string) (*model.Price, error) {
-	c.Lock()
+	c.RLock()
 	v, ok := c.data[key]
 	if ok {
-		c.Unlock()
+		c.RUnlock()
 		return v, nil
 	}
-	c.Unlock()
+	c.RUnlock()
 	return nil, fmt.Errorf("%s does not exists", key)
 }
 
