@@ -14,7 +14,7 @@ import (
 //
 //go:generate mockery --name=PriceService --case=underscore --output=./mocks
 type PriceService interface {
-	Subscribe(names []string, streamID uuid.UUID) (chan []*model.Price, error)
+	Subscribe(streamID uuid.UUID) (chan []*model.Price, error)
 	UpdateSubscription(names []string, streamID uuid.UUID) error
 	DeleteSubscription(streamID uuid.UUID)
 }
@@ -32,17 +32,10 @@ func NewPrice(s PriceService) *Prices {
 
 // GetPrices add new grpc stream to stream slice
 func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) error {
-	response, err := server.Recv()
-	if err != nil {
-		logrus.Errorf("prices - GetPrices - Recv:%e", err)
-		return status.Errorf(codes.DataLoss, "no init data")
-	}
-
 	var streamID = uuid.New()
-	streamChan, err := h.service.Subscribe(response.Names, streamID)
+	streamChan, err := h.service.Subscribe(streamID)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"names":    response.Names,
 			"streamID": streamID,
 		}).Errorf("prices - GetPrices - Subscribe:%e", err)
 		return status.Error(codes.Unknown, err.Error())
@@ -59,8 +52,7 @@ func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) error {
 		case err = <-changeError:
 			logrus.Errorf("prices - GetPrices - change: %e", err)
 			return err
-		default:
-			currentPrices, open = <-streamChan
+		case currentPrices, open = <-streamChan:
 			if !open {
 				logrus.Fatal("prices - GetPrices - <-streamChan")
 				return nil
@@ -76,6 +68,7 @@ func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) error {
 				changeStop <- struct{}{}
 				return err
 			}
+		default:
 		}
 	}
 }
@@ -83,16 +76,17 @@ func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) error {
 func (h *Prices) change(server pr.PriceService_GetPricesServer, streamID uuid.UUID, stop chan struct{}, end chan error) {
 	var response *pr.GetPricesRequest
 	var err error
+
 	for {
 		select {
 		case <-stop:
-			break
+			return
 		default:
 			response, err = server.Recv()
 			if err != nil {
-				logrus.Errorf("prices - change - Recv:%e", err)
+				logrus.Errorf("prices - change - Recv: %v", err.Error())
 				end <- status.Error(codes.DataLoss, err.Error())
-				break
+				return
 			}
 			err = h.service.UpdateSubscription(response.Names, streamID)
 			if err != nil {
@@ -101,7 +95,7 @@ func (h *Prices) change(server pr.PriceService_GetPricesServer, streamID uuid.UU
 					"streamID":       streamID,
 				}).Errorf("prices - change - UpdateSubscription:%e", err)
 				end <- status.Error(codes.Unknown, err.Error())
-				break
+				return
 			}
 		}
 	}
@@ -111,9 +105,9 @@ func toGRPC(req []*model.Price) []*pr.Price {
 	result := make([]*pr.Price, len(req))
 	for i := range result {
 		result[i] = &pr.Price{
-			Name:          result[i].Name,
-			SellingPrice:  result[i].SellingPrice,
-			PurchasePrice: result[i].PurchasePrice,
+			Name:          req[i].Name,
+			SellingPrice:  req[i].SellingPrice,
+			PurchasePrice: req[i].PurchasePrice,
 		}
 	}
 	return result

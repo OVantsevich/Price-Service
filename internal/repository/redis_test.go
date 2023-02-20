@@ -90,11 +90,12 @@ func TestRedis_GetPrices(t *testing.T) {
 	}
 
 	var numberOfReceivedMessages = 1
+	var cnorm = 0
 	logrus.Infof("begin time: %s", time.Now())
-	_, offset, err := redisRps.GetPrices(ctx, "0")
+	_, id, cnorm, err := redisRps.GetPrices(ctx, 100, "0")
 	require.NoError(t, err)
-	for ; numberOfReceivedMessages < numberOfMessages*numberOfPublishers; numberOfReceivedMessages++ {
-		_, offset, err = redisRps.GetPrices(ctx, offset)
+	for ; numberOfReceivedMessages < numberOfMessages*numberOfPublishers; numberOfReceivedMessages += cnorm {
+		_, id, cnorm, err = redisRps.GetPrices(ctx, 100, id)
 		require.NoError(t, err)
 	}
 	logrus.Infof("end time: %s", time.Now())

@@ -21,7 +21,7 @@ const (
 
 var redisRps *Redis
 
-var cache *Cache
+var streamPool *StreamPool
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("unix:///home/olegvantsevich/.docker/desktop/docker.sock")
@@ -62,7 +62,7 @@ func TestMain(m *testing.M) {
 	}); err != nil {
 		logrus.Fatalf("Could not connect to redis: %s", err)
 	}
-	cache = NewCache()
+	streamPool = NewStreamPool()
 
 	code := m.Run()
 
