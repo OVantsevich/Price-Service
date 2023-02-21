@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"Price-Service/internal/model"
+	"github.com/OVantsevich/Price-Service/internal/model"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"

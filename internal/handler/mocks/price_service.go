@@ -3,9 +3,11 @@
 package mocks
 
 import (
-	model "Price-Service/internal/model"
+	context "context"
 
 	mock "github.com/stretchr/testify/mock"
+
+	model "github.com/OVantsevich/Price-Service/internal/model"
 
 	uuid "github.com/google/uuid"
 )
@@ -27,6 +29,29 @@ func (_m *PriceService) DeleteSubscription(streamID uuid.UUID) error {
 	}
 
 	return r0
+}
+
+// GetCurrentPrices provides a mock function with given fields: ctx, names
+func (_m *PriceService) GetCurrentPrices(ctx context.Context, names []string) (map[string]*model.Price, error) {
+	ret := _m.Called(ctx, names)
+
+	var r0 map[string]*model.Price
+	if rf, ok := ret.Get(0).(func(context.Context, []string) map[string]*model.Price); ok {
+		r0 = rf(ctx, names)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]*model.Price)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = rf(ctx, names)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Subscribe provides a mock function with given fields: streamID

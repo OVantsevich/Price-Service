@@ -3,8 +3,7 @@
 package mocks
 
 import (
-	model "Price-Service/internal/model"
-
+	model "github.com/OVantsevich/Price-Service/internal/model"
 	mock "github.com/stretchr/testify/mock"
 
 	uuid "github.com/google/uuid"

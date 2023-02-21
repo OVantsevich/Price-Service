@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"net"
 
-	"Price-Service/internal/config"
-	"Price-Service/internal/handler"
-	"Price-Service/internal/repository"
-	"Price-Service/internal/service"
-	pr "Price-Service/proto"
+	"github.com/OVantsevich/Price-Service/internal/config"
+	"github.com/OVantsevich/Price-Service/internal/handler"
+	"github.com/OVantsevich/Price-Service/internal/repository"
+	"github.com/OVantsevich/Price-Service/internal/service"
+	pr "github.com/OVantsevich/Price-Service/proto"
 
+	pppr "github.com/OVantsevich/PriceProvider/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -36,8 +38,17 @@ func main() {
 	redisRep := repository.NewRedis(client, cfg.StreamName)
 	streamPool := repository.NewStreamPool()
 
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(fmt.Sprintf(cfg.PriceProviderHost, cfg.PriceProviderHost), opts...)
+	if err != nil {
+		logrus.Fatal("Fatal Dial: ", err)
+	}
+	ppClient := pppr.NewPriceServiceClient(conn)
+	priceProvider := repository.NewPriceProvider(ppClient)
+
 	cls := make(chan struct{})
-	priceService := service.NewPrices(context.Background(), streamPool, redisRep, "0", cls)
+	priceService := service.NewPrices(context.Background(), streamPool, redisRep, priceProvider, "0", cls)
 	defer close(cls)
 	priceHandler := handler.NewPrice(priceService)
 

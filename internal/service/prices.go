@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"Price-Service/internal/model"
+	"github.com/OVantsevich/Price-Service/internal/model"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -25,6 +25,13 @@ type MQ interface {
 	GetPrices(ctx context.Context, count int64, start string) ([][]*model.Price, string, int, error)
 }
 
+// PriceProvider grpc price provider
+//
+//go:generate mockery --name=PriceProvider --case=underscore --output=./mocks
+type PriceProvider interface {
+	GetCurrentPrices(ctx context.Context, names []string) (map[string]*model.Price, error)
+}
+
 // StreamPoolRepository pool of channels from prices to streams
 //
 //go:generate mockery --name=StreamPoolRepository --case=underscore --output=./mocks
@@ -36,14 +43,15 @@ type StreamPoolRepository interface {
 
 // Prices prices service
 type Prices struct {
-	messageQueue MQ
-	streamPool   StreamPoolRepository
-	sMap         sync.Map
+	messageQueue  MQ
+	streamPool    StreamPoolRepository
+	priceProvider PriceProvider
+	sMap          sync.Map
 }
 
 // NewPrices constructor
-func NewPrices(ctx context.Context, spr StreamPoolRepository, mq MQ, startPosition string, end <-chan struct{}) *Prices {
-	prc := &Prices{messageQueue: mq, streamPool: spr}
+func NewPrices(ctx context.Context, spr StreamPoolRepository, mq MQ, pp PriceProvider, startPosition string, end <-chan struct{}) *Prices {
+	prc := &Prices{messageQueue: mq, priceProvider: pp, streamPool: spr}
 	go prc.cycle(ctx, end, startPosition)
 	return prc
 }
@@ -76,6 +84,11 @@ func (p *Prices) DeleteSubscription(streamID uuid.UUID) error {
 	close(streamChan.(chan *model.Price))
 	p.sMap.Delete(streamID)
 	return nil
+}
+
+// GetCurrentPrices get current price from price provider
+func (p *Prices) GetCurrentPrices(ctx context.Context, names []string) (map[string]*model.Price, error) {
+	return p.priceProvider.GetCurrentPrices(ctx, names)
 }
 
 // cycle getting data from redis and adding it to grpc streams

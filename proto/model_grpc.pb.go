@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PriceServiceClient interface {
 	GetPrices(ctx context.Context, opts ...grpc.CallOption) (PriceService_GetPricesClient, error)
-	GetAllPrices(ctx context.Context, in *Request, opts ...grpc.CallOption) (*GetPricesResponse, error)
+	GetCurrentPrices(ctx context.Context, in *GetCurrentPricesRequest, opts ...grpc.CallOption) (*GetCurrentPricesResponse, error)
 }
 
 type priceServiceClient struct {
@@ -65,9 +65,9 @@ func (x *priceServiceGetPricesClient) Recv() (*GetPricesResponse, error) {
 	return m, nil
 }
 
-func (c *priceServiceClient) GetAllPrices(ctx context.Context, in *Request, opts ...grpc.CallOption) (*GetPricesResponse, error) {
-	out := new(GetPricesResponse)
-	err := c.cc.Invoke(ctx, "/PriceService/GetAllPrices", in, out, opts...)
+func (c *priceServiceClient) GetCurrentPrices(ctx context.Context, in *GetCurrentPricesRequest, opts ...grpc.CallOption) (*GetCurrentPricesResponse, error) {
+	out := new(GetCurrentPricesResponse)
+	err := c.cc.Invoke(ctx, "/PriceService/GetCurrentPrices", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (c *priceServiceClient) GetAllPrices(ctx context.Context, in *Request, opts
 // for forward compatibility
 type PriceServiceServer interface {
 	GetPrices(PriceService_GetPricesServer) error
-	GetAllPrices(context.Context, *Request) (*GetPricesResponse, error)
+	GetCurrentPrices(context.Context, *GetCurrentPricesRequest) (*GetCurrentPricesResponse, error)
 	mustEmbedUnimplementedPriceServiceServer()
 }
 
@@ -90,8 +90,8 @@ type UnimplementedPriceServiceServer struct {
 func (UnimplementedPriceServiceServer) GetPrices(PriceService_GetPricesServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetPrices not implemented")
 }
-func (UnimplementedPriceServiceServer) GetAllPrices(context.Context, *Request) (*GetPricesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAllPrices not implemented")
+func (UnimplementedPriceServiceServer) GetCurrentPrices(context.Context, *GetCurrentPricesRequest) (*GetCurrentPricesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentPrices not implemented")
 }
 func (UnimplementedPriceServiceServer) mustEmbedUnimplementedPriceServiceServer() {}
 
@@ -132,20 +132,20 @@ func (x *priceServiceGetPricesServer) Recv() (*GetPricesRequest, error) {
 	return m, nil
 }
 
-func _PriceService_GetAllPrices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+func _PriceService_GetCurrentPrices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCurrentPricesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PriceServiceServer).GetAllPrices(ctx, in)
+		return srv.(PriceServiceServer).GetCurrentPrices(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/PriceService/GetAllPrices",
+		FullMethod: "/PriceService/GetCurrentPrices",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PriceServiceServer).GetAllPrices(ctx, req.(*Request))
+		return srv.(PriceServiceServer).GetCurrentPrices(ctx, req.(*GetCurrentPricesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -158,8 +158,8 @@ var PriceService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*PriceServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetAllPrices",
-			Handler:    _PriceService_GetAllPrices_Handler,
+			MethodName: "GetCurrentPrices",
+			Handler:    _PriceService_GetCurrentPrices_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

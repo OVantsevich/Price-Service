@@ -4,7 +4,7 @@ package repository
 import (
 	"sync"
 
-	"Price-Service/internal/model"
+	"github.com/OVantsevich/Price-Service/internal/model"
 
 	"github.com/google/uuid"
 )

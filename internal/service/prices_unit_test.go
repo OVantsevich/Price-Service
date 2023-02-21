@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"Price-Service/internal/model"
-	"Price-Service/internal/service/mocks"
+	"github.com/OVantsevich/Price-Service/internal/model"
+	"github.com/OVantsevich/Price-Service/internal/service/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -16,6 +16,7 @@ func TestPrices_All(t *testing.T) {
 	end := make(chan struct{}, 1)
 	mq := mocks.NewMQ(t)
 	sp := mocks.NewStreamPoolRepository(t)
+	pp := mocks.NewPriceProvider(t)
 	sp.On("Send", mock.AnythingOfType("[]*model.Price")).Maybe()
 	sp.On("Update", mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("chan *model.Price"),
 		mock.AnythingOfType("[]string")).Maybe()
@@ -24,7 +25,7 @@ func TestPrices_All(t *testing.T) {
 	mq.On("GetPrices", mock.AnythingOfType("*context.emptyCtx"),
 		mock.AnythingOfType("int64"), mock.AnythingOfType("string")).Return([][]*model.Price{}, "", 0, nil).Maybe()
 
-	prices = NewPrices(context.Background(), sp, mq, "0", end)
+	prices = NewPrices(context.Background(), sp, mq, pp, "0", end)
 
 	testStreamID := uuid.New()
 	prices.Subscribe(testStreamID)

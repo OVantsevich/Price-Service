@@ -2,9 +2,11 @@
 package handler
 
 import (
-	"Price-Service/internal/model"
-	pr "Price-Service/proto"
+	"context"
 
+	pr "github.com/OVantsevich/Price-Service/proto"
+
+	"github.com/OVantsevich/Price-Service/internal/model"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -18,6 +20,8 @@ type PriceService interface {
 	Subscribe(streamID uuid.UUID) chan *model.Price
 	UpdateSubscription(names []string, streamID uuid.UUID) error
 	DeleteSubscription(streamID uuid.UUID) error
+
+	GetCurrentPrices(ctx context.Context, names []string) (map[string]*model.Price, error)
 }
 
 // Prices handler
@@ -29,6 +33,28 @@ type Prices struct {
 // NewPrice constructor
 func NewPrice(s PriceService) *Prices {
 	return &Prices{service: s}
+}
+
+// GetCurrentPrices get current prices from price provider
+func (h *Prices) GetCurrentPrices(ctx context.Context, request *pr.GetCurrentPricesRequest) (*pr.GetCurrentPricesResponse, error) {
+	result, err := h.service.GetCurrentPrices(ctx, request.Names)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"request.Names": request.Names,
+		}).Errorf("prices - GetCurrentPrices - GetCurrentPrices: %e", err)
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	response := &pr.GetCurrentPricesResponse{
+		Prices: make(map[string]*pr.Price),
+	}
+	for _, r := range result {
+		response.Prices[r.Name] = &pr.Price{
+			Name:          r.Name,
+			SellingPrice:  r.SellingPrice,
+			PurchasePrice: r.PurchasePrice,
+		}
+	}
+	return response, err
 }
 
 // GetPrices add new grpc stream to stream slice

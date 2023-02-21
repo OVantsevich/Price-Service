@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"Price-Service/internal/model"
+	"github.com/OVantsevich/Price-Service/internal/model"
 
 	"github.com/google/uuid"
 )

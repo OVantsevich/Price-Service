@@ -3,9 +3,9 @@
 package mocks
 
 import (
-	model "Price-Service/internal/model"
 	context "context"
 
+	model "github.com/OVantsevich/Price-Service/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
