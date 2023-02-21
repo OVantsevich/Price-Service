@@ -16,31 +16,33 @@ type PriceService struct {
 }
 
 // DeleteSubscription provides a mock function with given fields: streamID
-func (_m *PriceService) DeleteSubscription(streamID uuid.UUID) {
-	_m.Called(streamID)
+func (_m *PriceService) DeleteSubscription(streamID uuid.UUID) error {
+	ret := _m.Called(streamID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uuid.UUID) error); ok {
+		r0 = rf(streamID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // Subscribe provides a mock function with given fields: streamID
-func (_m *PriceService) Subscribe(streamID uuid.UUID) (chan []*model.Price, error) {
+func (_m *PriceService) Subscribe(streamID uuid.UUID) chan *model.Price {
 	ret := _m.Called(streamID)
 
-	var r0 chan []*model.Price
-	if rf, ok := ret.Get(0).(func(uuid.UUID) chan []*model.Price); ok {
+	var r0 chan *model.Price
+	if rf, ok := ret.Get(0).(func(uuid.UUID) chan *model.Price); ok {
 		r0 = rf(streamID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(chan []*model.Price)
+			r0 = ret.Get(0).(chan *model.Price)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(uuid.UUID) error); ok {
-		r1 = rf(streamID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // UpdateSubscription provides a mock function with given fields: names, streamID

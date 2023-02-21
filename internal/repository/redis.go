@@ -19,13 +19,13 @@ type Redis struct {
 
 // NewRedis constructor
 func NewRedis(client *redis.Client, streamName string) *Redis {
-	rds := &Redis{Client: client, StreamName: streamName}
-	return rds
+	return &Redis{Client: client, StreamName: streamName}
 }
 
 // GetPrices get last prices from stream
-func (c *Redis) GetPrices(ctx context.Context, count int64, start string) (map[string]*model.Price, string, int, error) {
-	data, err := c.Client.XRead(ctx, &redis.XReadArgs{
+func (c *Redis) GetPrices(ctx context.Context, count int64, start string) (prices [][]*model.Price, end string, resultNumber int, err error) {
+	var data []redis.XStream
+	data, err = c.Client.XRead(ctx, &redis.XReadArgs{
 		Streams: []string{c.StreamName, start},
 		Count:   count,
 		Block:   0,
@@ -34,24 +34,17 @@ func (c *Redis) GetPrices(ctx context.Context, count int64, start string) (map[s
 		return nil, "", 0, fmt.Errorf("redis - GetPrices - XRead: %w", err)
 	}
 
-	prices := make(map[string]*model.Price)
+	prices = make([][]*model.Price, len(data[0].Messages))
 	var curPrices []*model.Price
 
-	for _, message := range data[0].Messages {
+	for i, message := range data[0].Messages {
 		dataFromStream := []byte(message.Values["data"].(string))
 
 		err = json.Unmarshal(dataFromStream, &curPrices)
 		if err != nil {
 			return nil, "", 0, fmt.Errorf("redis - GetPrices - Unmarshal: %w", err)
 		}
-		for _, p := range curPrices {
-			val, ok := prices[p.Name]
-			if ok {
-				val.PurchasePrice = p.PurchasePrice
-				val.SellingPrice = p.SellingPrice
-			}
-			prices[p.Name] = p
-		}
+		prices[i] = curPrices
 	}
 
 	return prices, data[0].Messages[len(data[0].Messages)-1].ID, len(data[0].Messages), nil

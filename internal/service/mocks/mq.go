@@ -14,27 +14,41 @@ type MQ struct {
 	mock.Mock
 }
 
-// GetPrices provides a mock function with given fields: ctx
-func (_m *MQ) GetPrices(ctx context.Context) ([]*model.Price, error) {
-	ret := _m.Called(ctx)
+// GetPrices provides a mock function with given fields: ctx, count, start
+func (_m *MQ) GetPrices(ctx context.Context, count int64, start string) ([][]*model.Price, string, int, error) {
+	ret := _m.Called(ctx, count, start)
 
-	var r0 []*model.Price
-	if rf, ok := ret.Get(0).(func(context.Context) []*model.Price); ok {
-		r0 = rf(ctx)
+	var r0 [][]*model.Price
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string) [][]*model.Price); ok {
+		r0 = rf(ctx, count, start)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*model.Price)
+			r0 = ret.Get(0).([][]*model.Price)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	var r1 string
+	if rf, ok := ret.Get(1).(func(context.Context, int64, string) string); ok {
+		r1 = rf(ctx, count, start)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	var r2 int
+	if rf, ok := ret.Get(2).(func(context.Context, int64, string) int); ok {
+		r2 = rf(ctx, count, start)
+	} else {
+		r2 = ret.Get(2).(int)
+	}
+
+	var r3 error
+	if rf, ok := ret.Get(3).(func(context.Context, int64, string) error); ok {
+		r3 = rf(ctx, count, start)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
 }
 
 type mockConstructorTestingTNewMQ interface {

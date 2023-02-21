@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 
@@ -32,9 +33,11 @@ func main() {
 	})
 	defer client.Close()
 
-	redisRep := repository.NewRedis(client, cfg.StreamName, cfg.GroupName)
+	redisRep := repository.NewRedis(client, cfg.StreamName)
+	streamPool := repository.NewStreamPool()
+
 	cls := make(chan struct{})
-	priceService := service.NewPrices(redisRep, cls)
+	priceService := service.NewPrices(context.Background(), streamPool, redisRep, "0", cls)
 	defer close(cls)
 	priceHandler := handler.NewPrice(priceService)
 

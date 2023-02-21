@@ -4,6 +4,7 @@ package handler
 import (
 	"Price-Service/internal/model"
 	pr "Price-Service/proto"
+
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -14,9 +15,9 @@ import (
 //
 //go:generate mockery --name=PriceService --case=underscore --output=./mocks
 type PriceService interface {
-	Subscribe(streamID uuid.UUID) (chan []*model.Price, error)
+	Subscribe(streamID uuid.UUID) chan *model.Price
 	UpdateSubscription(names []string, streamID uuid.UUID) error
-	DeleteSubscription(streamID uuid.UUID)
+	DeleteSubscription(streamID uuid.UUID) error
 }
 
 // Prices handler
@@ -31,22 +32,16 @@ func NewPrice(s PriceService) *Prices {
 }
 
 // GetPrices add new grpc stream to stream slice
-func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) error {
+func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) (err error) {
 	var streamID = uuid.New()
-	streamChan, err := h.service.Subscribe(streamID)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"streamID": streamID,
-		}).Errorf("prices - GetPrices - Subscribe:%e", err)
-		return status.Error(codes.Unknown, err.Error())
-	}
+	streamChan := h.service.Subscribe(streamID)
 
 	changeError := make(chan error, 1)
 	changeStop := make(chan struct{}, 1)
 	go h.change(server, streamID, changeStop, changeError)
 
 	var open bool
-	var currentPrices []*model.Price
+	var currentPrices *model.Price
 	for {
 		select {
 		case err = <-changeError:
@@ -58,17 +53,21 @@ func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) error {
 				return nil
 			}
 			err = server.Send(&pr.GetPricesResponse{
-				Prices: toGRPC(currentPrices),
+				Prices: toGRPC([]*model.Price{currentPrices}),
 			})
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
-					"grpcPrices": toGRPC(currentPrices),
+					"grpcPrices": toGRPC([]*model.Price{currentPrices}),
 				}).Errorf("prices - GetPrices - Send:%e", err)
-				h.service.DeleteSubscription(streamID)
+				if err2 := h.service.DeleteSubscription(streamID); err2 != nil {
+					logrus.WithFields(logrus.Fields{
+						"streamID": streamID,
+					}).Errorf("prices - GetPrices - DeleteSubscription: %e", err2)
+				}
+
 				changeStop <- struct{}{}
 				return err
 			}
-		default:
 		}
 	}
 }

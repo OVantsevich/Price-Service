@@ -1,17 +1,19 @@
 package repository
 
 import (
-	"Price-Service/internal/model"
 	"context"
 	"crypto/rand"
 	"encoding/json"
-	"github.com/go-redis/redis/v8"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
 	"math/big"
 	"runtime"
 	"testing"
 	"time"
+
+	"Price-Service/internal/model"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 )
 
 // 24 bits “mantissa”, otherwise known as a coefficient or significand.
@@ -90,10 +92,10 @@ func TestRedis_GetPrices(t *testing.T) {
 	}
 
 	var numberOfReceivedMessages = 1
-	var cnorm = 0
 	logrus.Infof("begin time: %s", time.Now())
-	_, id, cnorm, err := redisRps.GetPrices(ctx, 100, "0")
-	require.NoError(t, err)
+	var id = "0"
+	var err error
+	var cnorm int
 	for ; numberOfReceivedMessages < numberOfMessages*numberOfPublishers; numberOfReceivedMessages += cnorm {
 		_, id, cnorm, err = redisRps.GetPrices(ctx, 100, id)
 		require.NoError(t, err)

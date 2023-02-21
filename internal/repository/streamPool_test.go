@@ -16,8 +16,8 @@ func TestCache_Get(t *testing.T) {
 		names[i] = prices[i].Name
 	}
 
-	streamID2 := uuid.New().String()
-	streamID1 := uuid.New().String()
+	streamID2 := uuid.New()
+	streamID1 := uuid.New()
 	streamChan1 := make(chan *model.Price, 100)
 	streamChan2 := make(chan *model.Price, 100)
 
@@ -26,7 +26,7 @@ func TestCache_Get(t *testing.T) {
 
 	streamPool.Send(prices)
 
-	for _ = range names {
+	for range names {
 		select {
 		case i := <-streamChan1:
 			fmt.Println(i)
@@ -39,11 +39,11 @@ func TestCache_Get(t *testing.T) {
 		}
 	}
 
-	streamPool.Delete(streamID1, names)
+	streamPool.Delete(streamID1)
 
 	streamPool.Send(prices)
 
-	for _ = range names {
+	for range names {
 		select {
 		case i := <-streamChan1:
 			fmt.Println(i)
@@ -56,13 +56,13 @@ func TestCache_Get(t *testing.T) {
 		}
 	}
 
-	streamPool.Delete(streamID2, names)
-	streamPool.Delete(streamID2, names)
-	streamPool.Delete(streamID2, names)
+	streamPool.Delete(streamID2)
+	streamPool.Delete(streamID2)
+	streamPool.Delete(streamID2)
 
 	streamPool.Send(prices)
 
-	for _ = range names {
+	for range names {
 		select {
 		case i := <-streamChan1:
 			fmt.Println(i)

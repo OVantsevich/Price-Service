@@ -5,14 +5,16 @@ import (
 	"sync"
 
 	"Price-Service/internal/model"
+
+	"github.com/google/uuid"
 )
 
 // Subscribers storing subscribers
-type Subscribers map[string]chan *model.Price
+type Subscribers map[uuid.UUID]chan *model.Price
 
 // StreamPool cache of prices
 type StreamPool struct {
-	sync.RWMutex
+	MU     sync.RWMutex
 	prices map[string]Subscribers
 }
 
@@ -22,8 +24,8 @@ func NewStreamPool() *StreamPool {
 }
 
 // Update add new pairs: price-stream
-func (s *StreamPool) Update(streamID string, streamChan chan *model.Price, prices []string) error {
-	s.Lock()
+func (s *StreamPool) Update(streamID uuid.UUID, streamChan chan *model.Price, prices []string) {
+	s.MU.Lock()
 	for _, p := range prices {
 		cp, ok := s.prices[p]
 		if ok {
@@ -33,28 +35,25 @@ func (s *StreamPool) Update(streamID string, streamChan chan *model.Price, price
 		s.prices[p] = make(Subscribers)
 		s.prices[p][streamID] = streamChan
 	}
-	s.Unlock()
-	return nil
+	s.MU.Unlock()
 }
 
 // Delete remove pairs: price-stream
-func (s *StreamPool) Delete(streamID string, prices []string) error {
-	s.Lock()
-	for _, p := range prices {
-		delete(s.prices[p], streamID)
+func (s *StreamPool) Delete(streamID uuid.UUID) {
+	s.MU.Lock()
+	for _, p := range s.prices {
+		delete(p, streamID)
 	}
-	s.Unlock()
-	return nil
+	s.MU.Unlock()
 }
 
 // Send prices to streams
 func (s *StreamPool) Send(prices []*model.Price) {
-	s.RLock()
+	s.MU.RLock()
 	for _, p := range prices {
 		for _, c := range s.prices[p.Name] {
 			select {
 			case c <- p:
-				break
 			default:
 				go func(goP *model.Price, goC chan *model.Price) {
 					goC <- goP
@@ -62,5 +61,5 @@ func (s *StreamPool) Send(prices []*model.Price) {
 			}
 		}
 	}
-	s.RUnlock()
+	s.MU.RUnlock()
 }

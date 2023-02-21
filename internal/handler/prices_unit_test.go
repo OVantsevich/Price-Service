@@ -1,19 +1,21 @@
 package handler
 
 import (
+	"context"
+	"fmt"
+	"net"
+	"testing"
+
 	"Price-Service/internal/handler/mocks"
 	"Price-Service/internal/model"
 	pr "Price-Service/proto"
-	"context"
-	"fmt"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
-	"net"
-	"testing"
 )
 
 func server(ctx context.Context) (pr.PriceServiceClient, func()) {
@@ -66,7 +68,7 @@ func TestPrices_GetPrices(t *testing.T) {
 	}
 	client, closer := server(context.Background())
 	defer closer()
-	channel := make(chan []*model.Price, 1)
+	channel := make(chan *model.Price, 1000)
 	priceService.On("Subscribe", mock.AnythingOfType("uuid.UUID")).Return(channel, nil).Once()
 	priceService.On("UpdateSubscription", mock.AnythingOfType("[]string"), mock.AnythingOfType("uuid.UUID")).Return(nil).Once()
 	priceService.On("DeleteSubscription", mock.AnythingOfType("uuid.UUID")).Return().Maybe()
@@ -75,8 +77,9 @@ func TestPrices_GetPrices(t *testing.T) {
 	require.NoError(t, err)
 
 	err = outClient.Send(&pr.GetPricesRequest{Names: testGetPriceNames()})
+	require.NoError(t, err)
 
-	channel <- []*model.Price{
+	sendPrices := []*model.Price{
 		{
 			Name:          "gold",
 			SellingPrice:  50,
@@ -98,8 +101,9 @@ func TestPrices_GetPrices(t *testing.T) {
 			PurchasePrice: 50,
 		},
 	}
-
-	//time.Sleep(time.Second * 2)
+	for _, p := range sendPrices {
+		channel <- p
+	}
 
 	resp, err := outClient.Recv()
 
