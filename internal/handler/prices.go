@@ -4,7 +4,7 @@ package handler
 import (
 	"context"
 
-	pr "github.com/OVantsevich/Price-Service/proto"
+	pr "github.com/OVantsevich/Price-Service/ps_proto"
 
 	"github.com/OVantsevich/Price-Service/internal/model"
 	"github.com/google/uuid"

@@ -10,7 +10,7 @@ import (
 	"github.com/OVantsevich/Price-Service/internal/handler"
 	"github.com/OVantsevich/Price-Service/internal/repository"
 	"github.com/OVantsevich/Price-Service/internal/service"
-	pr "github.com/OVantsevich/Price-Service/proto"
+	pr "github.com/OVantsevich/Price-Service/ps_proto"
 
 	pppr "github.com/OVantsevich/PriceProvider/proto"
 	"github.com/go-redis/redis/v8"
@@ -40,7 +40,7 @@ func main() {
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.Dial(fmt.Sprintf(cfg.PriceProviderHost, cfg.PriceProviderHost), opts...)
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", cfg.PriceProviderHost, cfg.PriceProviderHost), opts...)
 	if err != nil {
 		logrus.Fatal("Fatal Dial: ", err)
 	}

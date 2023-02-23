@@ -1,0 +1,32 @@
+syntax = "proto3";
+option go_package = "github.com/OVantsevich/Price-Service/proto";
+
+package priceservice_proto;
+
+service PriceService{
+  rpc GetPrices(stream GetPricesRequest) returns(stream GetPricesResponse);
+
+  rpc GetCurrentPrices(GetCurrentPricesRequest) returns(GetCurrentPricesResponse);
+}
+
+message GetPricesRequest{
+  repeated string Names = 1;
+}
+
+message GetPricesResponse{
+  repeated Price prices = 1;
+}
+
+message GetCurrentPricesRequest{
+  repeated string Names = 1;
+}
+
+message GetCurrentPricesResponse{
+  map<string, Price> prices  = 1;
+}
+
+message Price{
+  string Name = 1;
+  float SellingPrice = 2;
+  float PurchasePrice = 3;
+}
