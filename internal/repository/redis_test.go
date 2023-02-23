@@ -20,10 +20,10 @@ import (
 const maxInt int64 = 1 << 24
 
 // starting prices
-const startPrice float32 = 50
+const startPrice float64 = 50
 
 // maxPrice max price
-const maxChange float32 = 5
+const maxChange float64 = 5
 
 // numberOfPublishers number of publishers
 const numberOfPublishers int = 5
@@ -31,10 +31,10 @@ const numberOfPublishers int = 5
 // numberOfMessages number of publishers
 const numberOfMessages int = 10000
 
-// Float32 random float32 using crypto/rand
-func Float32() float32 {
+// Float64 random float64 using crypto/rand
+func Float64() float64 {
 	nBig, _ := rand.Int(rand.Reader, big.NewInt(maxInt))
-	return float32(nBig.Int64()) / float32(maxInt)
+	return float64(nBig.Int64()) / float64(maxInt)
 }
 
 func testGetStartPrices() []*model.Price {
@@ -42,22 +42,22 @@ func testGetStartPrices() []*model.Price {
 		{
 			Name:          "gold",
 			SellingPrice:  startPrice,
-			PurchasePrice: startPrice + Float32(),
+			PurchasePrice: startPrice + Float64(),
 		},
 		{
 			Name:          "oil",
 			SellingPrice:  startPrice,
-			PurchasePrice: startPrice + Float32(),
+			PurchasePrice: startPrice + Float64(),
 		},
 		{
 			Name:          "tesla",
 			SellingPrice:  startPrice,
-			PurchasePrice: startPrice + Float32(),
+			PurchasePrice: startPrice + Float64(),
 		},
 		{
 			Name:          "google",
 			SellingPrice:  startPrice,
-			PurchasePrice: startPrice + Float32(),
+			PurchasePrice: startPrice + Float64(),
 		},
 	}
 }
@@ -67,7 +67,7 @@ func publishPrices(ctx context.Context, client *redis.Client, streamName string,
 
 	for i := 0; i < messageNumber; i++ {
 		for _, pr := range prices {
-			chg := -maxChange + (2*maxChange)*Float32()
+			chg := -maxChange + (2*maxChange)*Float64()
 			pr.SellingPrice += chg
 			pr.PurchasePrice += chg
 		}

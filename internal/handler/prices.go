@@ -71,7 +71,7 @@ func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) (err error) {
 	for {
 		select {
 		case err = <-changeError:
-			logrus.Errorf("prices - GetPrices - change: %e", err)
+			logrus.Errorf("prices - GetPrices - change: %v", err)
 			return err
 		case currentPrices, open = <-streamChan:
 			if !open {
@@ -109,7 +109,7 @@ func (h *Prices) change(server pr.PriceService_GetPricesServer, streamID uuid.UU
 		default:
 			response, err = server.Recv()
 			if err != nil {
-				logrus.Errorf("prices - change - Recv: %v", err.Error())
+				logrus.Errorf("prices - change - Recv: %v", err)
 				end <- status.Error(codes.DataLoss, err.Error())
 				return
 			}

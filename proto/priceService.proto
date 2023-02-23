@@ -27,6 +27,6 @@ message GetCurrentPricesResponse{
 
 message Price{
   string Name = 1;
-  float SellingPrice = 2;
-  float PurchasePrice = 3;
+  double SellingPrice = 2;
+  double PurchasePrice = 3;
 }
