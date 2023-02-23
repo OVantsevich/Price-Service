@@ -10,7 +10,7 @@ import (
 	"github.com/OVantsevich/Price-Service/internal/handler"
 	"github.com/OVantsevich/Price-Service/internal/repository"
 	"github.com/OVantsevich/Price-Service/internal/service"
-	pr "github.com/OVantsevich/Price-Service/ps_proto"
+	pr "github.com/OVantsevich/Price-Service/proto"
 
 	pppr "github.com/OVantsevich/PriceProvider/proto"
 	"github.com/go-redis/redis/v8"

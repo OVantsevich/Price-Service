@@ -8,7 +8,7 @@ import (
 
 	"github.com/OVantsevich/Price-Service/internal/handler/mocks"
 	"github.com/OVantsevich/Price-Service/internal/model"
-	pr "github.com/OVantsevich/Price-Service/ps_proto"
+	pr "github.com/OVantsevich/Price-Service/proto"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"

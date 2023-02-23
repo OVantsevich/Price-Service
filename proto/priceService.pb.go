@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v3.12.4
-// source: ps_proto/priceService.proto
+// source: proto/priceService.proto
 
 package proto
 
