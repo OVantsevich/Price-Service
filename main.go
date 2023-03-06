@@ -46,7 +46,6 @@ func main() {
 	}
 	ppClient := pppr.NewPriceServiceClient(conn)
 	priceProvider := repository.NewPriceProvider(ppClient)
-
 	cls := make(chan struct{})
 	priceService := service.NewPrices(context.Background(), streamPool, redisRep, priceProvider, "0", cls)
 	defer close(cls)

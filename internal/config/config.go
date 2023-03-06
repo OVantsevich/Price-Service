@@ -9,13 +9,13 @@ import (
 
 // Config config
 type Config struct {
-	RedisHost         string `env:"REDIS_HOST,notEmpty" envDefault:"localhost"`
-	RedisPort         string `env:"REDIS_PORT,notEmpty" envDefault:"6379"`
-	RedisPassword     string `env:"REDIS_PASSWORD,notEmpty" envDefault:"redis"`
-	StreamName        string `env:"STREAM_NAME,notEmpty" envDefault:"prices"`
-	GroupName         string `env:"GROUP_NAME,notEmpty" envDefault:"priceGroup"`
-	Port              string `env:"PORT,notEmpty" envDefault:"10000"`
-	PriceProviderPort string `env:"PRICE_PROVIDER_PORT,notEmpty" envDefault:"4707"`
+	RedisHost     string `env:"REDIS_HOST,notEmpty" envDefault:"localhost"`
+	RedisPort     string `env:"REDIS_PORT,notEmpty" envDefault:"6379"`
+	RedisPassword string `env:"REDIS_PASSWORD,notEmpty" envDefault:"redis"`
+	StreamName    string `env:"STREAM_NAME,notEmpty" envDefault:"prices"`
+	//GroupName         string `env:"GROUP_NAME,notEmpty" envDefault:"priceGroup"`
+	Port              string `env:"PORT,notEmpty" envDefault:"4000"`
+	PriceProviderPort string `env:"PRICE_PROVIDER_PORT,notEmpty" envDefault:"3000"`
 	PriceProviderHost string `env:"PRICE_PROVIDER_HOST,notEmpty" envDefault:"localhost"`
 }
 
