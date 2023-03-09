@@ -11,11 +11,11 @@ import (
 
 // PriceProvider entity
 type PriceProvider struct {
-	client pr.PriceServiceClient
+	client pr.PriceProviderClient
 }
 
 // NewPriceProvider constructor
-func NewPriceProvider(client pr.PriceServiceClient) *PriceProvider {
+func NewPriceProvider(client pr.PriceProviderClient) *PriceProvider {
 	return &PriceProvider{client}
 }
 

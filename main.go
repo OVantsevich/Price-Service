@@ -40,11 +40,11 @@ func main() {
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", cfg.PriceProviderHost, cfg.PriceProviderHost), opts...)
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", cfg.PriceProviderHost, cfg.PriceProviderPort), opts...)
 	if err != nil {
 		logrus.Fatal("Fatal Dial: ", err)
 	}
-	ppClient := pppr.NewPriceServiceClient(conn)
+	ppClient := pppr.NewPriceProviderClient(conn)
 	priceProvider := repository.NewPriceProvider(ppClient)
 	cls := make(chan struct{})
 	priceService := service.NewPrices(context.Background(), streamPool, redisRep, priceProvider, "0", cls)

@@ -3,7 +3,7 @@ module github.com/OVantsevich/Price-Service
 go 1.19
 
 require (
-	github.com/OVantsevich/PriceProvider v0.0.0-20230221122400-394a1a4b0cd5
+	github.com/OVantsevich/PriceProvider v0.0.0-20230309065259-03718b48b2d6
 	github.com/caarlos0/env/v7 v7.0.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
