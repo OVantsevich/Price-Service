@@ -41,7 +41,7 @@ func (h *Prices) GetCurrentPrices(ctx context.Context, request *pr.GetCurrentPri
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"request.Names": request.Names,
-		}).Errorf("prices - GetCurrentPrices - GetCurrentPrices: %e", err)
+		}).Errorf("prices - GetCurrentPrices - GetCurrentPrices: %v", err)
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 	response := &pr.GetCurrentPricesResponse{
@@ -84,11 +84,11 @@ func (h *Prices) GetPrices(server pr.PriceService_GetPricesServer) (err error) {
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
 					"grpcPrices": toGRPC([]*model.Price{currentPrices}),
-				}).Errorf("prices - GetPrices - Send:%e", err)
+				}).Errorf("prices - GetPrices - Send:%v", err)
 				if err2 := h.service.DeleteSubscription(streamID); err2 != nil {
 					logrus.WithFields(logrus.Fields{
 						"streamID": streamID,
-					}).Errorf("prices - GetPrices - DeleteSubscription: %e", err2)
+					}).Errorf("prices - GetPrices - DeleteSubscription: %v", err2)
 				}
 
 				changeStop <- struct{}{}
@@ -118,7 +118,7 @@ func (h *Prices) change(server pr.PriceService_GetPricesServer, streamID uuid.UU
 				logrus.WithFields(logrus.Fields{
 					"response.Names": response.Names,
 					"streamID":       streamID,
-				}).Errorf("prices - change - UpdateSubscription:%e", err)
+				}).Errorf("prices - change - UpdateSubscription:%v", err)
 				end <- status.Error(codes.Unknown, err.Error())
 				return
 			}

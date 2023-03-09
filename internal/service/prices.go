@@ -107,7 +107,7 @@ func (p *Prices) cycle(ctx context.Context, end <-chan struct{}, sp string) {
 				logrus.WithFields(logrus.Fields{
 					"batchSize":     batchSize,
 					"startPosition": startPosition,
-				}).Fatalf("prices - cycle - GetPrices: %e", err)
+				}).Fatalf("prices - cycle - GetPrices: %v", err)
 				return
 			}
 			for _, price := range prices {

@@ -27,7 +27,7 @@ func main() {
 
 	listen, err := net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Host, cfg.Port))
 	if err != nil {
-		defer logrus.Fatalf("error while listening port: %e", err)
+		logrus.Fatalf("error while listening port: %v", err)
 	}
 
 	client := redis.NewClient(&redis.Options{
@@ -55,6 +55,6 @@ func main() {
 	pr.RegisterPriceServiceServer(ns, priceHandler)
 
 	if err = ns.Serve(listen); err != nil {
-		defer logrus.Fatalf("error while listening server: %e", err)
+		logrus.Fatalf("error while listening server: %v", err)
 	}
 }

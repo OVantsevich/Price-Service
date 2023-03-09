@@ -23,7 +23,7 @@ func NewPriceProvider(client pr.PriceServiceClient) *PriceProvider {
 func (p *PriceProvider) GetCurrentPrices(ctx context.Context, names []string) (map[string]*model.Price, error) {
 	res, err := p.client.GetCurrentPrices(ctx, &pr.GetPricesRequest{Names: names})
 	if err != nil {
-		return nil, fmt.Errorf("priceProvider - GetCurrentPrices - GetCurrentPrices: %e", err)
+		return nil, fmt.Errorf("priceProvider - GetCurrentPrices - GetCurrentPrices: %w", err)
 	}
 	prices := fromGRPC(res.Prices)
 	return prices, nil
