@@ -31,7 +31,7 @@ func (p *PriceProvider) GetCurrentPrices(ctx context.Context, names []string) (m
 
 func fromGRPC(req map[string]*pr.Price) map[string]*model.Price {
 	result := make(map[string]*model.Price, len(req))
-	for _, r := range result {
+	for _, r := range req {
 		result[r.Name] = &model.Price{
 			Name:          r.Name,
 			SellingPrice:  r.SellingPrice,
